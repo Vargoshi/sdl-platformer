@@ -2,7 +2,6 @@ use sdl2::{
     keyboard::{KeyboardState, Scancode},
     rect::{Point, Rect},
 };
-use std::cmp::Ordering;
 
 pub struct Game {
     pub player: Player,
@@ -36,15 +35,7 @@ impl Game {
 
     pub fn step(&mut self, ks: KeyboardState) {
         self.player.velocity.y += 1;
-        match self.player.velocity.x.cmp(&0) {
-            Ordering::Less => {
-                self.player.velocity.x += 1;
-            }
-            Ordering::Greater => {
-                self.player.velocity.x -= 1;
-            }
-            Ordering::Equal => {}
-        }
+        self.player.velocity.x += -self.player.velocity.x.signum();
 
         if ks.is_scancode_pressed(Scancode::Space) && self.player.on_floor {
             self.player.velocity.y = -15;
@@ -58,24 +49,48 @@ impl Game {
 
         self.player.on_floor = false;
 
-        if self.is_collision(Point::new(self.player.velocity.x, 0)) {
-            self.player.velocity.x = 0;
+        let (offset, did_collide) =
+            self.move_rect(self.player.rect, Point::new(self.player.velocity.x, 0));
+        if did_collide {
+            self.player.velocity.x = 0
         }
-        self.player.rect.x += self.player.velocity.x;
-        if self.is_collision(Point::new(0, self.player.velocity.y)) {
+        self.player.rect.x += offset.x;
+
+        let (offset, did_collide) =
+            self.move_rect(self.player.rect, Point::new(0, self.player.velocity.y));
+        if did_collide {
             if self.player.velocity.y > 0 {
-                self.player.on_floor = true;
+                self.player.on_floor = true
             }
-            self.player.velocity.y = 0;
+            self.player.velocity.y = 0
         }
-        self.player.rect.y += self.player.velocity.y;
+        self.player.rect.y += offset.y;
     }
 
-    pub fn is_collision(&self, offset: Point) -> bool {
-        let mut moved_rect = self.player.rect;
-        moved_rect.offset(offset.x, offset.y);
+    /// Tries to move rect by the offset but stops on collision.
+    /// Returns new offset and whether there was collision.
+    fn move_rect(&self, rect: Rect, mut offset: Point) -> (Point, bool) {
+        let mut did_collide = false;
+        loop {
+            let mut moved_rect = rect;
+            moved_rect.offset(offset.x, offset.y);
+            if self.is_collision(moved_rect) {
+                did_collide = true;
+            } else {
+                break;
+            }
+            offset.x -= offset.x.signum();
+            offset.y -= offset.y.signum();
+            if offset.x == 0 && offset.y == 0 {
+                break;
+            }
+        }
+        (offset, did_collide)
+    }
+
+    fn is_collision(&self, rect: Rect) -> bool {
         for floor in &self.floors {
-            if floor.rect.has_intersection(moved_rect) {
+            if floor.rect.has_intersection(rect) {
                 return true;
             }
         }
