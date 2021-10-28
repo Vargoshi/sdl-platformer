@@ -89,12 +89,9 @@ impl Game {
     }
 
     fn is_collision(&self, rect: Rect) -> bool {
-        for floor in &self.floors {
-            if floor.rect.has_intersection(rect) {
-                return true;
-            }
-        }
-        false
+        self.floors
+            .iter()
+            .any(|floor| floor.rect.has_intersection(rect))
     }
 }
 
