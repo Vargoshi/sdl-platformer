@@ -12,12 +12,16 @@ pub struct Body {
 }
 
 impl Body {
-    pub fn step(&mut self, floors: &[Floor]) {
+    pub fn step(&mut self, floors: &[Floor], should_collide: bool) {
         self.vel.y += 1;
         self.vel.x += -self.vel.x.signum();
         self.on_floor = false;
         self.on_wall = None;
-        let (offset, did_collide) = Self::move_rect(floors, self.rect, Point::new(self.vel.x, 0));
+        let (offset, did_collide) = if should_collide {
+            Self::move_rect(floors, self.rect, Point::new(self.vel.x, 0))
+        } else {
+            (self.vel, false)
+        };
         if did_collide {
             if self.vel.x > 0 {
                 self.on_wall = Some(Dir::Right);
@@ -30,7 +34,11 @@ impl Body {
         }
 
         self.rect.x += offset.x;
-        let (offset, did_collide) = Self::move_rect(floors, self.rect, Point::new(0, self.vel.y));
+        let (offset, did_collide) = if should_collide {
+        Self::move_rect(floors, self.rect, Point::new(0, self.vel.y))
+        } else {
+            (self.vel, false)
+        };
         if did_collide {
             if self.vel.y > 0 {
                 self.on_floor = true

@@ -26,6 +26,7 @@ impl Game {
                     on_floor: false,
                     on_wall: None,
                 },
+                is_dead: false,
             },
             floors: vec![
                 Floor {
@@ -65,20 +66,22 @@ impl Game {
     }
 
     pub fn step(&mut self, ks: KeyboardState) {
-        if ks.is_scancode_pressed(Scancode::Space) && self.player.body.on_floor {
-            self.player.body.vel.y = -15;
-        }
-        if ks.is_scancode_pressed(Scancode::Left) {
-            self.player.body.vel.x = -10;
-        }
-        if ks.is_scancode_pressed(Scancode::Right) {
-            self.player.body.vel.x = 10;
+        if !self.player.is_dead {
+            if ks.is_scancode_pressed(Scancode::Space) && self.player.body.on_floor {
+                self.player.body.vel.y = -15;
+            }
+            if ks.is_scancode_pressed(Scancode::Left) {
+                self.player.body.vel.x = -10;
+            }
+            if ks.is_scancode_pressed(Scancode::Right) {
+                self.player.body.vel.x = 10;
+            }
         }
 
-        self.player.body.step(&self.floors);
+        self.player.body.step(&self.floors, !self.player.is_dead);
 
         for enemy in &mut self.enemies {
-            enemy.body.step(&self.floors);
+            enemy.body.step(&self.floors, true);
             match enemy.dir {
                 Dir::Left => {
                     enemy.body.vel.x = -3;
@@ -95,6 +98,16 @@ impl Game {
                 Some(Dir::Right) => {
                     enemy.dir = Dir::Left;
                 }
+            }
+            if enemy.body.rect.has_intersection(self.player.body.rect) && !self.player.is_dead {
+                self.player.is_dead = true;
+                self.player.body.vel.x = 0;
+                self.player.body.vel.y = -5;
+            }
+
+            if self.player.body.rect.y > 600 {
+                self.player.is_dead = false;
+                self.player.body.rect.y = 100;
             }
         }
     }
@@ -116,6 +129,7 @@ impl Game {
 
 struct Player {
     body: body::Body,
+    is_dead: bool,
 }
 
 pub struct Floor {
