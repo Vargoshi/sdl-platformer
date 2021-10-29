@@ -70,11 +70,11 @@ impl Game {
             if ks.is_scancode_pressed(Scancode::Space) && self.player.body.on_floor {
                 self.player.body.vel.y = -15;
             }
-            if ks.is_scancode_pressed(Scancode::Left) {
-                self.player.body.vel.x = -10;
+            if ks.is_scancode_pressed(Scancode::Left) && self.player.body.vel.x > -10 {
+                self.player.body.vel.x -= 2;
             }
-            if ks.is_scancode_pressed(Scancode::Right) {
-                self.player.body.vel.x = 10;
+            if ks.is_scancode_pressed(Scancode::Right) && self.player.body.vel.x < 10 {
+                self.player.body.vel.x += 2;
             }
         }
 
@@ -84,10 +84,14 @@ impl Game {
             enemy.body.step(&self.floors, true);
             match enemy.dir {
                 Dir::Left => {
-                    enemy.body.vel.x = -3;
+                    if enemy.body.vel.x > -3 {
+                        enemy.body.vel.x -= 2;
+                    }
                 }
                 Dir::Right => {
-                    enemy.body.vel.x = 3;
+                    if enemy.body.vel.x < 3 {
+                        enemy.body.vel.x += 2;
+                    }
                 }
             }
             match enemy.body.on_wall {
