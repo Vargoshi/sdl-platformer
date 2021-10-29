@@ -1,3 +1,5 @@
+use crate::draw::SCREEN_WIDTH;
+
 use super::Floor;
 
 use sdl2::rect::Point;
@@ -13,14 +15,15 @@ pub struct Body {
 
 impl Body {
     pub fn step(&mut self, floors: &[Floor], should_collide: bool) {
-        self.vel.y += 1;
-        self.vel.x += -self.vel.x.signum();
+        self.vel.y += 5;
+        self.vel.x += -self.vel.x.signum() * 2;
         self.on_floor = false;
         self.on_wall = None;
+
         let (offset, did_collide) = if should_collide {
-            Self::move_rect(floors, self.rect, Point::new(self.vel.x, 0))
+            Self::move_rect(floors, self.rect, Point::new(self.vel.x / 10, 0))
         } else {
-            (self.vel, false)
+            (Point::new(self.vel.x/10,self.vel.y/10), false)
         };
         if did_collide {
             if self.vel.x > 0 {
@@ -34,10 +37,18 @@ impl Body {
         }
 
         self.rect.x += offset.x;
+
+        if self.rect.center().x < 0 {
+            self.rect.x += SCREEN_WIDTH as i32;
+        }
+        if self.rect.center().x > SCREEN_WIDTH as i32 {
+            self.rect.x -= SCREEN_WIDTH as i32;
+        }
+
         let (offset, did_collide) = if should_collide {
-        Self::move_rect(floors, self.rect, Point::new(0, self.vel.y))
+            Self::move_rect(floors, self.rect, Point::new(0, self.vel.y / 10))
         } else {
-            (self.vel, false)
+            (Point::new(self.vel.x/10,self.vel.y/10), false)
         };
         if did_collide {
             if self.vel.y > 0 {
@@ -70,7 +81,21 @@ impl Body {
     }
 
     fn is_collision(floors: &[Floor], rect: Rect) -> bool {
-        floors.iter().any(|floor| floor.rect.has_intersection(rect))
+        floors.iter().any(|floor| {
+            floor.rect.has_intersection(rect)
+                || floor.rect.has_intersection(Rect::new(
+                    rect.x - SCREEN_WIDTH as i32,
+                    rect.y,
+                    rect.width(),
+                    rect.height(),
+                ))
+                || floor.rect.has_intersection(Rect::new(
+                    rect.x + SCREEN_WIDTH as i32,
+                    rect.y,
+                    rect.width(),
+                    rect.height(),
+                ))
+        })
     }
 }
 

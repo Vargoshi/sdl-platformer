@@ -6,8 +6,9 @@ use sdl2::{
     video::Window,
 };
 
-pub const SCREEN_WIDTH: u32 = 800;
-pub const SCREEN_HEIGHT: u32 = 600;
+pub const ZOOM_FACTOR: u32 = 3;
+pub const SCREEN_WIDTH: u32 = 256;
+pub const SCREEN_HEIGHT: u32 = 224;
 
 pub fn draw_text(
     canvas: &mut Canvas<Window>,

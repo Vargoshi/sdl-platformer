@@ -2,7 +2,7 @@ mod app;
 mod draw;
 
 use app::App;
-use draw::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use draw::{SCREEN_HEIGHT, SCREEN_WIDTH, ZOOM_FACTOR};
 use sdl2::{render::Canvas, video::Window, EventPump};
 
 fn main() -> Result<(), String> {
@@ -11,7 +11,11 @@ fn main() -> Result<(), String> {
     let video_subsystem = sdl_context.video()?;
 
     let window = video_subsystem
-        .window("SDL2", SCREEN_WIDTH, SCREEN_HEIGHT)
+        .window(
+            "SDL2",
+            SCREEN_WIDTH * ZOOM_FACTOR,
+            SCREEN_HEIGHT * ZOOM_FACTOR,
+        )
         .position_centered()
         .build()
         .map_err(|e| e.to_string())?;
