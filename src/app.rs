@@ -1,5 +1,7 @@
 mod game;
 
+
+
 use sdl2::{
     keyboard::{KeyboardState, Scancode},
     pixels::Color,
@@ -49,12 +51,7 @@ impl App {
                 // crate::draw::draw_text(self.canvas, ...)
             }
             State::Game(game) => {
-                self.canvas.set_draw_color(Color::RGBA(200, 200, 200, 255));
-                self.canvas.fill_rect(game.player.rect)?;
-                self.canvas.set_draw_color(Color::RGBA(200, 0, 0, 255));
-                for floor in &game.floors {
-                    self.canvas.fill_rect(floor.rect)?;
-                }
+                game.draw(&mut self.canvas)?;
             }
         }
 
