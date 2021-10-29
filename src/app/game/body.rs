@@ -8,6 +8,7 @@ pub struct Body {
     pub rect: Rect,
     pub vel: Point,
     pub on_floor: bool,
+    pub on_wall: Option<Dir>,
 }
 
 impl Body {
@@ -15,10 +16,19 @@ impl Body {
         self.vel.y += 1;
         self.vel.x += -self.vel.x.signum();
         self.on_floor = false;
+        self.on_wall = None;
         let (offset, did_collide) = Self::move_rect(floors, self.rect, Point::new(self.vel.x, 0));
         if did_collide {
+            if self.vel.x > 0 {
+                self.on_wall = Some(Dir::Right);
+            }
+            if self.vel.x < 0 {
+                self.on_wall = Some(Dir::Left);
+            }
+
             self.vel.x = 0
         }
+
         self.rect.x += offset.x;
         let (offset, did_collide) = Self::move_rect(floors, self.rect, Point::new(0, self.vel.y));
         if did_collide {
@@ -54,4 +64,9 @@ impl Body {
     fn is_collision(floors: &[Floor], rect: Rect) -> bool {
         floors.iter().any(|floor| floor.rect.has_intersection(rect))
     }
+}
+
+pub enum Dir {
+    Left,
+    Right,
 }

@@ -8,12 +8,12 @@ use sdl2::{
     video::Window,
 };
 
-use body::Body;
+use self::body::{Body, Dir};
 
 pub struct Game {
-    pub player: Player,
-    pub floors: Vec<Floor>,
-    pub enemies: Vec<Enemy>,
+    player: Player,
+    floors: Vec<Floor>,
+    enemies: Vec<Enemy>,
 }
 
 impl Game {
@@ -24,6 +24,7 @@ impl Game {
                     rect: Rect::new(200, 200, 32, 64),
                     vel: Point::new(0, 0),
                     on_floor: false,
+                    on_wall: None,
                 },
             },
             floors: vec![
@@ -46,14 +47,18 @@ impl Game {
                         rect: Rect::new(300, 250, 32, 64),
                         vel: Point::new(0, 0),
                         on_floor: false,
+                        on_wall: None,
                     },
+                    dir: Dir::Left,
                 },
                 Enemy {
                     body: Body {
                         rect: Rect::new(400, 250, 32, 64),
                         vel: Point::new(0, 0),
                         on_floor: false,
+                        on_wall: None,
                     },
+                    dir: Dir::Left,
                 },
             ],
         }
@@ -74,6 +79,23 @@ impl Game {
 
         for enemy in &mut self.enemies {
             enemy.body.step(&self.floors);
+            match enemy.dir {
+                Dir::Left => {
+                    enemy.body.vel.x = -3;
+                }
+                Dir::Right => {
+                    enemy.body.vel.x = 3;
+                }
+            }
+            match enemy.body.on_wall {
+                None => {}
+                Some(Dir::Left) => {
+                    enemy.dir = Dir::Right;
+                }
+                Some(Dir::Right) => {
+                    enemy.dir = Dir::Left;
+                }
+            }
         }
     }
 
@@ -92,14 +114,15 @@ impl Game {
     }
 }
 
-pub struct Player {
-    pub body: body::Body,
+struct Player {
+    body: body::Body,
 }
 
 pub struct Floor {
-    pub rect: Rect,
+    rect: Rect,
 }
 
-pub struct Enemy {
-    pub body: body::Body,
+struct Enemy {
+    body: body::Body,
+    dir: Dir,
 }
