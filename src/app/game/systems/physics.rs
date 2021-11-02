@@ -18,6 +18,7 @@ pub(crate) fn system(game: &mut Game) {
         {
             vel.y += physics.gravity;
             vel.x += -vel.x.signum() * physics.friction;
+            physics.on_floor = false;
         }
     }
 
@@ -41,18 +42,34 @@ pub(crate) fn system(game: &mut Game) {
                     ..
                 } = other_entity
                 {
+                    let mut on_floor = false;
+                    let mut vel = Vel { ..*vel };
+                    let mut did_collide = false;
+
                     if Rect::new(pos.x, pos.y + vel.y / 10, size.w, size.h).has_intersection(
                         Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
                     ) {
-                        collisions.push((index, Vel { x: vel.x, y: 0 }));
-                        break;
+                        if vel.y > 0 {
+                            on_floor = true;
+                        }
+                        vel.y = 0;
+                        did_collide = true;
                     }
 
-                    if Rect::new(pos.x + vel.x / 10, pos.y, size.w, size.h).has_intersection(
-                        Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
-                    ) {
-                        collisions.push((index, Vel { x: 0, y: vel.y }));
-                        break;
+                    if Rect::new(pos.x + vel.x / 10, pos.y + vel.y / 10, size.w, size.h)
+                        .has_intersection(Rect::new(
+                            other_pos.x,
+                            other_pos.y,
+                            other_size.w,
+                            other_size.h,
+                        ))
+                    {
+                        vel.x = 0;
+                        did_collide = true;
+                    }
+
+                    if did_collide {
+                        collisions.push((index, vel, on_floor));
                     }
                 }
             }
@@ -60,8 +77,10 @@ pub(crate) fn system(game: &mut Game) {
     }
 
     // mutate collided entities
-    for (index, vel) in collisions {
-        game.entities[index].vel = Some(vel);
+    for (index, vel, on_floor) in collisions {
+        let entity = &mut game.entities[index];
+        entity.vel = Some(vel);
+        entity.physics.as_mut().unwrap().on_floor = on_floor;
     }
 
     // add velocity to position
