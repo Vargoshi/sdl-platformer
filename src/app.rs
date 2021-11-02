@@ -1,7 +1,5 @@
 mod game;
 
-
-
 use sdl2::{
     keyboard::{KeyboardState, Scancode},
     pixels::Color,
