@@ -1,10 +1,11 @@
 use sdl2::rect::Rect;
 
-use crate::app::game::{entity::Entity, Game};
+use crate::app::game::{components::Vel, entity::Entity, Game};
 
 pub(crate) fn system(game: &mut Game) {
     let mut collisions = Vec::new();
 
+    // apply gravity and friction to velocity
     for entity in &mut game.entities {
         if let Entity {
             pos: Some(_),
@@ -20,6 +21,7 @@ pub(crate) fn system(game: &mut Game) {
         }
     }
 
+    // detect collisions and insert to temporary vector
     for (index, entity) in game.entities.iter().enumerate() {
         if let Entity {
             pos: Some(pos),
@@ -39,15 +41,17 @@ pub(crate) fn system(game: &mut Game) {
                     ..
                 } = other_entity
                 {
-                    if Rect::new(pos.x + vel.x / 10, pos.y + vel.y / 10, size.w, size.h)
-                        .has_intersection(Rect::new(
-                            other_pos.x,
-                            other_pos.y,
-                            other_size.w,
-                            other_size.h,
-                        ))
-                    {
-                        collisions.push(index);
+                    if Rect::new(pos.x, pos.y + vel.y / 10, size.w, size.h).has_intersection(
+                        Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
+                    ) {
+                        collisions.push((index, Vel { x: vel.x, y: 0 }));
+                        break;
+                    }
+
+                    if Rect::new(pos.x + vel.x / 10, pos.y, size.w, size.h).has_intersection(
+                        Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
+                    ) {
+                        collisions.push((index, Vel { x: 0, y: vel.y }));
                         break;
                     }
                 }
@@ -55,11 +59,12 @@ pub(crate) fn system(game: &mut Game) {
         }
     }
 
-    for index in collisions {
-        game.entities[index].vel.as_mut().unwrap().x = 0;
-        game.entities[index].vel.as_mut().unwrap().y = 0;
+    // mutate collided entities
+    for (index, vel) in collisions {
+        game.entities[index].vel = Some(vel);
     }
 
+    // add velocity to position
     for entity in &mut game.entities {
         if let Entity {
             pos: Some(pos),
