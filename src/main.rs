@@ -1,9 +1,9 @@
-mod app;
-mod draw;
-
 use app::App;
 use draw::{SCREEN_HEIGHT, SCREEN_WIDTH, ZOOM_FACTOR};
 use sdl2::{render::Canvas, video::Window, EventPump};
+
+mod app;
+mod draw;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
