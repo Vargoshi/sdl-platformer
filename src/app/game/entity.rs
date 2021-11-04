@@ -9,4 +9,5 @@ pub(crate) struct Entity {
     pub health: Option<components::Health>,
     pub player: Option<components::Player>,
     pub enemy: Option<components::Enemy>,
+    pub draw: Option<components::Draw>,
 }

@@ -1,3 +1,5 @@
+use sdl2::pixels::Color;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Pos {
     pub(crate) x: i32,
@@ -48,4 +50,8 @@ pub(crate) struct Enemy {
 pub(crate) enum Dir {
     Left,
     Right,
+}
+
+pub(crate) struct Draw {
+    pub color: Color,
 }

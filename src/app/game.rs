@@ -2,7 +2,7 @@ mod components;
 mod entity;
 mod systems;
 
-use sdl2::{keyboard::KeyboardState, render::Canvas, video::Window};
+use sdl2::{keyboard::KeyboardState, pixels::Color, render::Canvas, video::Window};
 
 use crate::{
     app::game::{
@@ -11,6 +11,8 @@ use crate::{
     },
     draw::{SCREEN_HEIGHT, SCREEN_WIDTH},
 };
+
+use self::components::{Dir, Draw, Enemy};
 
 pub struct Game {
     entities: Vec<Entity>,
@@ -80,15 +82,25 @@ impl Game {
                 x: (sw as i32 / 2) + 20,
                 y: sh as i32 - 162,
             },
-            Size { w: (sw / 2) - 20, h: 8 },
+            Size {
+                w: (sw / 2) - 20,
+                h: 8,
+            },
         );
         game.add_wall(
             Pos {
                 x: 0,
                 y: sh as i32 - 162,
             },
-            Size { w: (sw / 2) - 20, h: 8 },
+            Size {
+                w: (sw / 2) - 20,
+                h: 8,
+            },
         );
+        game.add_enemy(Pos {
+            x: sw as i32 / 4,
+            y: 0,
+        });
         game
     }
 
@@ -107,10 +119,32 @@ impl Game {
             health: Some(Health::Alive),
             enemy: None,
             player: Some(Player),
+            draw: Some(Draw {
+                color: Color::RGBA(0, 200, 0, 255),
+            }),
         })
     }
 
-    fn add_enemy(&mut self, pos: Pos) {}
+    fn add_enemy(&mut self, pos: Pos) {
+        self.entities.push(Entity {
+            pos: Some(pos),
+            size: Some(Size { w: 16, h: 21 }),
+            vel: Some(Vel { x: 0, y: 0 }),
+            collision: None,
+            physics: Some(Physics {
+                on_floor: false,
+                on_wall: None,
+                gravity: 5,
+                friction: 2,
+            }),
+            health: Some(Health::Alive),
+            enemy: Some(Enemy { dir: Dir::Left }),
+            player: None,
+            draw: Some(Draw {
+                color: Color::RGBA(200, 0, 0, 255),
+            }),
+        })
+    }
 
     fn add_wall(&mut self, pos: Pos, size: Size) {
         self.entities.push(Entity {
@@ -122,6 +156,9 @@ impl Game {
             health: None,
             enemy: None,
             player: None,
+            draw: Some(Draw {
+                color: Color::RGBA(200, 200, 200, 255),
+            }),
         })
     }
 
@@ -131,9 +168,7 @@ impl Game {
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>) -> Result<(), String> {
-        systems::draw_players::system(self, canvas)?;
-        systems::draw_enemies::system(self, canvas)?;
-        systems::draw_floors::system(self, canvas)?;
+        systems::draw::system(self, canvas)?;
 
         Ok(())
     }

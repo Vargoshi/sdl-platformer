@@ -1,9 +1,12 @@
 use sdl2::rect::Rect;
 
-use crate::app::game::{
-    components::{Pos, Size, Vel},
-    entity::Entity,
-    Game,
+use crate::{
+    app::game::{
+        components::{Pos, Size, Vel},
+        entity::Entity,
+        Game,
+    },
+    draw::SCREEN_WIDTH,
 };
 
 pub(crate) fn system(game: &mut Game) {
@@ -55,7 +58,7 @@ pub(crate) fn system(game: &mut Game) {
     for entity in &mut game.entities {
         if let Entity {
             pos: Some(pos),
-            size: Some(_),
+            size: Some(size),
             vel: Some(vel),
             physics: Some(_),
             collision: None,
@@ -64,6 +67,13 @@ pub(crate) fn system(game: &mut Game) {
         {
             pos.x += vel.x / 10;
             pos.y += vel.y / 10;
+
+            if pos.x + (size.w as i32 / 2) < 0 {
+                pos.x += SCREEN_WIDTH as i32;
+            }
+            if pos.x + (size.w as i32 / 2) > SCREEN_WIDTH as i32 {
+                pos.x -= SCREEN_WIDTH as i32;
+            }
         }
     }
 }
@@ -130,6 +140,12 @@ fn has_collision(entities: &[Entity], pos: Pos, size: Size) -> bool {
         .any(|(other_pos, other_size)| {
             Rect::has_intersection(
                 &Rect::new(pos.x, pos.y, size.w, size.h),
+                Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
+            ) || Rect::has_intersection(
+                &Rect::new(pos.x+SCREEN_WIDTH as i32, pos.y, size.w, size.h),
+                Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
+            ) || Rect::has_intersection(
+                &Rect::new(pos.x-SCREEN_WIDTH as i32, pos.y, size.w, size.h),
                 Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
             )
         })
