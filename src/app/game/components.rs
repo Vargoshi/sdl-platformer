@@ -46,7 +46,7 @@ pub(crate) struct Enemy {
     pub(crate) dir: Dir,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum Dir {
     Left,
     Right,

@@ -165,6 +165,7 @@ impl Game {
     pub fn step(&mut self, ks: KeyboardState) {
         systems::player_ctrl::system(self, ks);
         systems::physics::system(self);
+        systems::enemy_ai::system(self);
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>) -> Result<(), String> {
