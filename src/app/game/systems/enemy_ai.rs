@@ -10,6 +10,7 @@ pub(crate) fn system(game: &mut Game) {
             vel: Some(vel),
             enemy: Some(enemy),
             health: Some(health),
+            physics: Some(physics),
             ..
         } = entity
         {
@@ -20,6 +21,13 @@ pub(crate) fn system(game: &mut Game) {
                 if enemy.dir == Dir::Right && vel.x < 20 {
                     vel.x += 5;
                 }
+            }
+
+            if physics.on_wall == Some(Dir::Left) {
+                enemy.dir = Dir::Right;
+            }
+            if physics.on_wall == Some(Dir::Right) {
+                enemy.dir = Dir::Left;
             }
         }
     }

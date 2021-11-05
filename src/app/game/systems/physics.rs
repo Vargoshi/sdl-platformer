@@ -2,7 +2,7 @@ use sdl2::rect::Rect;
 
 use crate::{
     app::game::{
-        components::{Pos, Size, Vel},
+        components::{Dir, Pos, Size, Vel},
         entity::Entity,
         Game,
     },
@@ -26,6 +26,7 @@ pub(crate) fn system(game: &mut Game) {
             vel.y += physics.gravity;
             vel.x += -vel.x.signum() * physics.friction;
             physics.on_floor = false;
+            physics.on_wall = None;
         }
     }
 
@@ -42,16 +43,28 @@ pub(crate) fn system(game: &mut Game) {
         {
             let (offset, col_x, col_y) = move_entity(&game.entities, *pos, *size, *vel);
             if col_x || col_y {
-                collisions.push((index, offset, col_y && vel.y > 0));
+                let on_floor = col_y && vel.y > 0;
+                let on_wall = if col_x {
+                    if vel.x < 0 {
+                        Some(Dir::Left)
+                    } else {
+                        Some(Dir::Right)
+                    }
+                } else {
+                    None
+                };
+
+                collisions.push((index, offset, on_floor, on_wall));
             }
         }
     }
 
     // mutate collided entities
-    for (index, vel, on_floor) in collisions {
+    for (index, vel, on_floor, on_wall) in collisions {
         let entity = &mut game.entities[index];
         entity.vel = Some(vel);
         entity.physics.as_mut().unwrap().on_floor = on_floor;
+        entity.physics.as_mut().unwrap().on_wall = on_wall;
     }
 
     // add velocity to position
@@ -142,10 +155,10 @@ fn has_collision(entities: &[Entity], pos: Pos, size: Size) -> bool {
                 &Rect::new(pos.x, pos.y, size.w, size.h),
                 Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
             ) || Rect::has_intersection(
-                &Rect::new(pos.x+SCREEN_WIDTH as i32, pos.y, size.w, size.h),
+                &Rect::new(pos.x + SCREEN_WIDTH as i32, pos.y, size.w, size.h),
                 Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
             ) || Rect::has_intersection(
-                &Rect::new(pos.x-SCREEN_WIDTH as i32, pos.y, size.w, size.h),
+                &Rect::new(pos.x - SCREEN_WIDTH as i32, pos.y, size.w, size.h),
                 Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
             )
         })
