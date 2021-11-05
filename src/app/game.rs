@@ -38,6 +38,13 @@ impl Game {
         );
         game.add_wall(
             Pos {
+                x: 0,
+                y: sh as i32 - 60 - 3,
+            },
+            Size { w: 8, h: 40 },
+        );
+        game.add_wall(
+            Pos {
                 x: (sw as i32 / 2) + 35,
                 y: sh as i32 - 60 - 3,
             },
@@ -101,6 +108,10 @@ impl Game {
             x: sw as i32 / 4,
             y: 0,
         });
+        game.add_enemy(Pos {
+            x: sw as i32 / 2,
+            y: 0,
+        });
         game
     }
 
@@ -109,10 +120,11 @@ impl Game {
             pos: Some(pos),
             size: Some(Size { w: 16, h: 21 }),
             vel: Some(Vel { x: 0, y: 0 }),
-            collision: None,
+            collision: Some(Collision),
             physics: Some(Physics {
                 on_floor: false,
-                on_wall: None,
+                on_left_wall: false,
+                on_right_wall: false,
                 gravity: 5,
                 friction: 2,
             }),
@@ -130,10 +142,11 @@ impl Game {
             pos: Some(pos),
             size: Some(Size { w: 16, h: 21 }),
             vel: Some(Vel { x: 0, y: 0 }),
-            collision: None,
+            collision: Some(Collision),
             physics: Some(Physics {
                 on_floor: false,
-                on_wall: None,
+                on_left_wall: false,
+                on_right_wall: false,
                 gravity: 5,
                 friction: 2,
             }),
@@ -165,11 +178,14 @@ impl Game {
     pub fn step(&mut self, ks: KeyboardState) {
         systems::player_ctrl::system(self, ks);
         systems::physics::system(self);
+        systems::collisions::system(self);
+        systems::stuck_detection::system(self);
+        systems::movement::system(self);
         systems::enemy_ai::system(self);
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>) -> Result<(), String> {
-        systems::draw::system(self, canvas)?;
+        systems::rendering::system(self, canvas)?;
 
         Ok(())
     }

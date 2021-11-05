@@ -15,20 +15,21 @@ pub(crate) fn system(game: &mut Game) {
         } = entity
         {
             if health == &Health::Alive {
-                if enemy.dir == Dir::Left && vel.x > -20 {
+                if enemy.dir == Dir::Left && vel.x > -10 {
                     vel.x -= 5;
                 }
-                if enemy.dir == Dir::Right && vel.x < 20 {
+                if enemy.dir == Dir::Right && vel.x < 10 {
                     vel.x += 5;
                 }
             }
 
-            if physics.on_wall == Some(Dir::Left) {
+            if physics.on_left_wall {
                 enemy.dir = Dir::Right;
             }
-            if physics.on_wall == Some(Dir::Right) {
+            if physics.on_right_wall {
                 enemy.dir = Dir::Left;
             }
+            //dbg!(enemy.dir);
         }
     }
 }
