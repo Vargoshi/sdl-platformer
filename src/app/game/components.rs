@@ -80,6 +80,7 @@ pub(crate) struct Player;
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Enemy {
     pub(crate) dir: Dir,
+    pub(crate) jumping: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

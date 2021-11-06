@@ -104,14 +104,20 @@ impl Game {
                 h: 8,
             },
         );
-        game.add_enemy(Pos {
-            x: sw as i32 / 4,
-            y: 0,
-        });
-        game.add_enemy(Pos {
-            x: sw as i32 / 2,
-            y: 0,
-        });
+        game.add_enemy(
+            Pos {
+                x: sw as i32 / 4,
+                y: 0,
+            },
+            true,
+        );
+        game.add_enemy(
+            Pos {
+                x: sw as i32 / 2,
+                y: 0,
+            },
+            false,
+        );
         game
     }
 
@@ -137,7 +143,7 @@ impl Game {
         })
     }
 
-    fn add_enemy(&mut self, pos: Pos) {
+    fn add_enemy(&mut self, pos: Pos, jumping: bool) {
         self.entities.push(Entity {
             pos: Some(pos),
             size: Some(Size { w: 16, h: 21 }),
@@ -151,7 +157,10 @@ impl Game {
                 friction: 0.2,
             }),
             health: Some(Health::Alive),
-            enemy: Some(Enemy { dir: Dir::Left }),
+            enemy: Some(Enemy {
+                dir: Dir::Left,
+                jumping,
+            }),
             player: None,
             draw: Some(Draw {
                 color: Color::RGBA(200, 0, 0, 255),

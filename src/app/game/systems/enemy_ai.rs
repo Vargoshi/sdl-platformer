@@ -21,6 +21,10 @@ pub(crate) fn system(game: &mut Game) {
                 if enemy.dir == Dir::Right && vel.x < 1.0 {
                     vel.x += 0.5;
                 }
+
+                if enemy.jumping && physics.on_floor {
+                    vel.y -= 4.0;
+                }
             }
 
             if physics.on_left_wall {
