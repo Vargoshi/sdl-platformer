@@ -17,9 +17,9 @@ pub(crate) fn system(game: &mut Game) {
         {
             let is_stuck = has_collision(&game.entities, index, *current_pos, *current_size);
             if is_stuck {
-                let mut offset = 1;
+                let mut offset = 1.0;
                 let new_pos = loop {
-                    let free_pos = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+                    let free_pos = [(1.0, 0.0), (-1.0, 0.0), (0.0, 1.0), (0.0, -1.0)]
                         .iter()
                         .map(|(x, y)| Vel { x: *x, y: *y })
                         .map(|vel| vel * offset)
@@ -30,8 +30,8 @@ pub(crate) fn system(game: &mut Game) {
                         break pos;
                     }
 
-                    offset += 1;
-                    if offset > 100 {
+                    offset += 1.0;
+                    if offset > 100.0 {
                         break *current_pos;
                     }
                 };

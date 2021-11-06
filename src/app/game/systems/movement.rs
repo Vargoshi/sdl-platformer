@@ -13,8 +13,7 @@ pub(crate) fn system(game: &mut Game) {
             ..
         } = entity
         {
-            pos.x += vel.x / 10;
-            pos.y += vel.y / 10;
+            *pos += *vel;
 
             if pos.x + (size.w as i32 / 2) < 0 {
                 pos.x += SCREEN_WIDTH as i32;

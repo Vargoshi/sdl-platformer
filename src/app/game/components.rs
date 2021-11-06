@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 use sdl2::pixels::Color;
 
@@ -13,20 +13,34 @@ impl Add<Vel> for Pos {
 
     fn add(self, rhs: Vel) -> Self::Output {
         Pos {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
+            x: self.x + rhs.x as i32,
+            y: self.y + rhs.y as i32,
         }
     }
 }
 
-impl Mul<i32> for Vel {
+impl AddAssign<Vel> for Pos {
+    fn add_assign(&mut self, rhs: Vel) {
+        self.x += rhs.x as i32;
+        self.y += rhs.y as i32;
+    }
+}
+
+impl Mul<f32> for Vel {
     type Output = Vel;
 
-    fn mul(self, rhs: i32) -> Self::Output {
+    fn mul(self, rhs: f32) -> Self::Output {
         Vel {
             x: self.x * rhs,
             y: self.y * rhs,
         }
+    }
+}
+
+impl MulAssign<f32> for Vel {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.x *= rhs;
+        self.y *= rhs;
     }
 }
 
@@ -36,11 +50,10 @@ pub(crate) struct Size {
     pub(crate) h: u32,
 }
 
-/// velocity in 1/10 pixels
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Vel {
-    pub(crate) x: i32,
-    pub(crate) y: i32,
+    pub(crate) x: f32,
+    pub(crate) y: f32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -51,10 +64,8 @@ pub(crate) struct Physics {
     pub(crate) on_floor: bool,
     pub(crate) on_left_wall: bool,
     pub(crate) on_right_wall: bool,
-    /// acceleration in 1/10 pixels per frame
-    pub(crate) gravity: i32,
-    /// deceleration in 1/10 pixels per frame
-    pub(crate) friction: i32,
+    pub(crate) gravity: f32,
+    pub(crate) friction: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

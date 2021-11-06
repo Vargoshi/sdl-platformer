@@ -30,9 +30,9 @@ pub(crate) fn system(game: &mut Game) {
             let (offset, col_x, col_y) = move_entity(&game.entities, index, *pos, *size, *vel);
 
             if col_x || col_y {
-                let on_floor = col_y && vel.y > 0;
-                let on_left_wall = col_x && vel.x < 0;
-                let on_right_wall = col_x && vel.x > 0;
+                let on_floor = col_y && vel.y > 0.0;
+                let on_left_wall = col_x && vel.x < 0.0;
+                let on_right_wall = col_x && vel.x > 0.0;
 
                 collisions.push((index, offset, on_floor, on_left_wall, on_right_wall));
             }

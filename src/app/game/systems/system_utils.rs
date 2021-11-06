@@ -24,36 +24,26 @@ pub(crate) fn move_entity(
     let mut has_col_x = false;
     let mut has_col_y = false;
 
-    while vel.x != 0 {
-        if !has_collision(
-            entities,
-            skip_index,
-            Pos {
-                x: pos.x + vel.x / 10,
-                y: pos.y,
-            },
-            size,
-        ) {
+    loop {
+        if !has_collision(entities, skip_index, pos + Vel { x: vel.x, y: 0.0 }, size) {
             break;
         }
         has_col_x = true;
         vel.x -= vel.x.signum();
+        if vel.x.abs() < 1.0 {
+            break;
+        }
     }
 
-    while vel.y != 0 {
-        if !has_collision(
-            entities,
-            skip_index,
-            Pos {
-                x: pos.x + vel.x / 10,
-                y: pos.y + vel.y / 10,
-            },
-            size,
-        ) {
+    loop {
+        if !has_collision(entities, skip_index, pos + vel, size) {
             break;
         }
         has_col_y = true;
         vel.y -= vel.y.signum();
+        if vel.y.abs() < 1.0 {
+            break;
+        }
     }
 
     (vel, has_col_x, has_col_y)

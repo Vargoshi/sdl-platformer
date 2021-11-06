@@ -15,11 +15,11 @@ pub(crate) fn system(game: &mut Game) {
         } = entity
         {
             if health == &Health::Alive {
-                if enemy.dir == Dir::Left && vel.x > -10 {
-                    vel.x -= 5;
+                if enemy.dir == Dir::Left && vel.x > -1.0 {
+                    vel.x -= 0.5;
                 }
-                if enemy.dir == Dir::Right && vel.x < 10 {
-                    vel.x += 5;
+                if enemy.dir == Dir::Right && vel.x < 1.0 {
+                    vel.x += 0.5;
                 }
             }
 

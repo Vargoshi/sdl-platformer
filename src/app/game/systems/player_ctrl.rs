@@ -16,13 +16,13 @@ pub(crate) fn system(game: &mut Game, ks: KeyboardState) {
         {
             if health == &Health::Alive {
                 if ks.is_scancode_pressed(Scancode::Space) && physics.on_floor {
-                    vel.y = -80;
+                    vel.y = -8.0;
                 }
-                if ks.is_scancode_pressed(Scancode::Left) && vel.x > -30 {
-                    vel.x -= 10;
+                if ks.is_scancode_pressed(Scancode::Left) && vel.x > -3.0 {
+                    vel.x -= 1.0;
                 }
-                if ks.is_scancode_pressed(Scancode::Right) && vel.x < 30 {
-                    vel.x += 10;
+                if ks.is_scancode_pressed(Scancode::Right) && vel.x < 3.0 {
+                    vel.x += 1.0;
                 }
             }
         }
