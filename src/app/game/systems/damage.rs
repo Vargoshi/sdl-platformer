@@ -1,33 +1,43 @@
-use sdl2::rect::Rect;
+use std::collections::HashSet;
 
 use crate::app::game::{components::Health, entity::Entity, Game};
 
 pub(crate) fn system(game: &mut Game) {
-    let mut damages = Vec::new();
+    let mut damages = HashSet::new();
 
     for (index, entity) in game.entities.iter().enumerate() {
         if let Entity {
             player: Some(_),
             health: Some(Health::Alive),
-            pos: Some(pos),
-            size: Some(size),
+            physics: Some(physics),
             ..
         } = entity
         {
-            for other_entity in &game.entities {
+            for contact in &physics.contacts {
+                let other_entity = &game.entities[*contact];
+                if let Entity { enemy: Some(_), .. } = other_entity {
+                    damages.insert(index);
+                }
+            }
+        }
+    }
+
+    for entity in &game.entities {
+        if let Entity {
+            enemy: Some(_),
+            physics: Some(physics),
+            ..
+        } = entity
+        {
+            for contact in &physics.contacts {
+                let other_entity = &game.entities[*contact];
                 if let Entity {
-                    enemy: Some(_),
-                    pos: Some(other_pos),
-                    size: Some(other_size),
+                    player: Some(_),
+                    health: Some(Health::Alive),
                     ..
                 } = other_entity
                 {
-                    if Rect::has_intersection(
-                        &Rect::new(pos.x, pos.y, size.w, size.h),
-                        Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
-                    ) {
-                        damages.push(index)
-                    }
+                    damages.insert(*contact);
                 }
             }
         }

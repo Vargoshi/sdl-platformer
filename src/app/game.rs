@@ -128,7 +128,7 @@ impl Game {
             pos: Some(pos),
             size: Some(Size { w: 16, h: 21 }),
             vel: Some(Vel { x: 0.0, y: 0.0 }),
-            collision: None,
+            collision: Some(Collision {}),
             physics: Some(Physics {
                 on_floor: false,
                 on_left_wall: false,
@@ -151,7 +151,7 @@ impl Game {
             pos: Some(pos),
             size: Some(Size { w: 16, h: 21 }),
             vel: Some(Vel { x: 0.0, y: 0.0 }),
-            collision: Some(Collision),
+            collision: Some(Collision {}),
             physics: Some(Physics {
                 on_floor: false,
                 on_left_wall: false,

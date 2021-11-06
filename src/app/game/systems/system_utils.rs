@@ -4,7 +4,7 @@ use sdl2::rect::Rect;
 
 use crate::{
     app::game::{
-        components::{Pos, Size, Vel},
+        components::{Health, Pos, Size, Vel},
         entity::Entity,
     },
     draw::SCREEN_WIDTH,
@@ -56,7 +56,12 @@ pub(crate) fn move_entity(
     (vel, has_col_x, has_col_y, contacts)
 }
 
-pub(crate) fn get_collisions(entities: &[Entity], skip_index: usize, pos: Pos, size: Size) -> HashSet<usize> {
+pub(crate) fn get_collisions(
+    entities: &[Entity],
+    skip_index: usize,
+    pos: Pos,
+    size: Size,
+) -> HashSet<usize> {
     entities
         .iter()
         .enumerate()
@@ -66,6 +71,7 @@ pub(crate) fn get_collisions(entities: &[Entity], skip_index: usize, pos: Pos, s
                 pos: Some(other_pos),
                 size: Some(other_size),
                 collision: Some(_),
+                health: Some(Health::Alive) | None,
                 ..
             } = entity
             {
