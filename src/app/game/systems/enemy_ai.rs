@@ -33,7 +33,6 @@ pub(crate) fn system(game: &mut Game) {
             if physics.on_right_wall {
                 enemy.dir = Dir::Left;
             }
-            //dbg!(enemy.dir);
         }
     }
 }
