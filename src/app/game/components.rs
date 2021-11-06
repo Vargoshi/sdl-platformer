@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use std::{collections::HashSet, ops::{Add, AddAssign, Mul, MulAssign}};
 
 use sdl2::pixels::Color;
 
@@ -59,13 +59,14 @@ pub(crate) struct Vel {
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Collision;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub(crate) struct Physics {
     pub(crate) on_floor: bool,
     pub(crate) on_left_wall: bool,
     pub(crate) on_right_wall: bool,
     pub(crate) gravity: f32,
     pub(crate) friction: f32,
+    pub(crate) contacts: HashSet<usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

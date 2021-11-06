@@ -4,7 +4,7 @@ use crate::app::game::{
     Game,
 };
 
-use super::system_utils::has_collision;
+use super::system_utils::get_collisions;
 
 /// Detect stuck entities and unstuck them by changing pos
 pub(crate) fn system(game: &mut Game) {
@@ -23,7 +23,7 @@ pub(crate) fn system(game: &mut Game) {
             if *health == Some(Health::Dead) {
                 continue;
             }
-            let is_stuck = has_collision(&game.entities, index, *current_pos, *current_size);
+            let is_stuck = !get_collisions(&game.entities, index, *current_pos, *current_size).is_empty();
             if is_stuck {
                 let mut offset = 1.0;
                 let new_pos = loop {
@@ -32,7 +32,7 @@ pub(crate) fn system(game: &mut Game) {
                         .map(|(x, y)| Vel { x: *x, y: *y })
                         .map(|vel| vel * offset)
                         .map(|vel| *current_pos + vel)
-                        .find(|pos| !has_collision(&game.entities, index, *pos, *current_size));
+                        .find(|pos| get_collisions(&game.entities, index, *pos, *current_size).is_empty());
 
                     if let Some(pos) = free_pos {
                         break pos;

@@ -25,6 +25,14 @@ pub(crate) fn system(game: &mut Game, ks: KeyboardState) {
                     vel.x += 1.0;
                 }
             }
+
+            // println!(
+            //     "{:?} {} {} {}",
+            //     physics.contacts,
+            //     if physics.on_floor { "floor" } else { "" },
+            //     if physics.on_left_wall { "left_wall" } else { "" },
+            //     if physics.on_right_wall { "right_wall" } else { "" },
+            // );
         }
     }
 }

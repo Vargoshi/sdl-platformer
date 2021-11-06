@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use sdl2::rect::Rect;
 
 use crate::{
@@ -18,16 +20,19 @@ pub(crate) fn move_entity(
     pos: Pos,
     size: Size,
     vel: Vel,
-) -> (Vel, bool, bool) {
+) -> (Vel, bool, bool, HashSet<usize>) {
     let mut vel = vel;
 
     let mut has_col_x = false;
     let mut has_col_y = false;
+    let mut contacts = HashSet::new();
 
     loop {
-        if !has_collision(entities, skip_index, pos + Vel { x: vel.x, y: 0.0 }, size) {
+        let collisions = get_collisions(entities, skip_index, pos + Vel { x: vel.x, y: 0.0 }, size);
+        if collisions.is_empty() {
             break;
         }
+        contacts.extend(collisions);
         has_col_x = true;
         vel.x -= vel.x.signum();
         if vel.x.abs() < 1.0 {
@@ -36,9 +41,11 @@ pub(crate) fn move_entity(
     }
 
     loop {
-        if !has_collision(entities, skip_index, pos + vel, size) {
+        let collisions = get_collisions(entities, skip_index, pos + vel, size);
+        if collisions.is_empty() {
             break;
         }
+        contacts.extend(collisions);
         has_col_y = true;
         vel.y -= vel.y.signum();
         if vel.y.abs() < 1.0 {
@@ -46,15 +53,15 @@ pub(crate) fn move_entity(
         }
     }
 
-    (vel, has_col_x, has_col_y)
+    (vel, has_col_x, has_col_y, contacts)
 }
 
-pub(crate) fn has_collision(entities: &[Entity], skip_index: usize, pos: Pos, size: Size) -> bool {
+pub(crate) fn get_collisions(entities: &[Entity], skip_index: usize, pos: Pos, size: Size) -> HashSet<usize> {
     entities
         .iter()
         .enumerate()
-        .filter(|(index, _)| *index != skip_index)
-        .filter_map(|(_, entity)| {
+        .filter(|(index, _entity)| *index != skip_index)
+        .filter_map(|(index, entity)| {
             if let Entity {
                 pos: Some(other_pos),
                 size: Some(other_size),
@@ -62,12 +69,12 @@ pub(crate) fn has_collision(entities: &[Entity], skip_index: usize, pos: Pos, si
                 ..
             } = entity
             {
-                Some((other_pos, other_size))
+                Some((index, other_pos, other_size))
             } else {
                 None
             }
         })
-        .any(|(other_pos, other_size)| {
+        .filter(|(_index, other_pos, other_size)| {
             Rect::has_intersection(
                 &Rect::new(pos.x, pos.y, size.w, size.h),
                 Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
@@ -79,4 +86,6 @@ pub(crate) fn has_collision(entities: &[Entity], skip_index: usize, pos: Pos, si
                 Rect::new(other_pos.x, other_pos.y, other_size.w, other_size.h),
             )
         })
+        .map(|(index, ..)| index)
+        .collect()
 }

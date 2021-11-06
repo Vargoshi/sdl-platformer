@@ -2,6 +2,8 @@ mod components;
 mod entity;
 mod systems;
 
+use std::collections::HashSet;
+
 use sdl2::{keyboard::KeyboardState, pixels::Color, render::Canvas, video::Window};
 
 use crate::{
@@ -133,6 +135,7 @@ impl Game {
                 on_right_wall: false,
                 gravity: 0.5,
                 friction: 0.2,
+                contacts: HashSet::new(),
             }),
             health: Some(Health::Alive),
             enemy: None,
@@ -155,6 +158,7 @@ impl Game {
                 on_right_wall: false,
                 gravity: 0.5,
                 friction: 0.2,
+                contacts: HashSet::new(),
             }),
             health: Some(Health::Alive),
             enemy: Some(Enemy {
