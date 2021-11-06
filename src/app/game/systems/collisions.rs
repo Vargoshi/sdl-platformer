@@ -1,4 +1,4 @@
-use crate::app::game::{entity::Entity, Game};
+use crate::app::game::{components::Health, entity::Entity, Game};
 
 use super::system_utils::move_entity;
 
@@ -24,9 +24,14 @@ pub(crate) fn system(game: &mut Game) {
             size: Some(size),
             vel: Some(vel),
             physics: Some(_),
+            health,
             ..
         } = entity
         {
+            if *health == Some(Health::Dead) {
+                continue;
+            }
+
             let (offset, col_x, col_y) = move_entity(&game.entities, index, *pos, *size, *vel);
 
             if col_x || col_y {

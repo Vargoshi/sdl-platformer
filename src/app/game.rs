@@ -120,7 +120,7 @@ impl Game {
             pos: Some(pos),
             size: Some(Size { w: 16, h: 21 }),
             vel: Some(Vel { x: 0.0, y: 0.0 }),
-            collision: Some(Collision),
+            collision: None,
             physics: Some(Physics {
                 on_floor: false,
                 on_left_wall: false,
@@ -179,8 +179,10 @@ impl Game {
         systems::player_ctrl::system(self, ks);
         systems::physics::system(self);
         systems::collisions::system(self);
-        systems::stuck_detection::system(self);
         systems::movement::system(self);
+        systems::damage::system(self);
+        systems::respawn::system(self);
+        systems::stuck_detection::system(self);
         systems::enemy_ai::system(self);
     }
 

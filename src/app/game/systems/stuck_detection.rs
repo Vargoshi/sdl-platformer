@@ -1,4 +1,8 @@
-use crate::app::game::{components::Vel, entity::Entity, Game};
+use crate::app::game::{
+    components::{Health, Vel},
+    entity::Entity,
+    Game,
+};
 
 use super::system_utils::has_collision;
 
@@ -12,9 +16,13 @@ pub(crate) fn system(game: &mut Game) {
             size: Some(current_size),
             vel: Some(_),
             physics: Some(_),
+            health,
             ..
         } = entity
         {
+            if *health == Some(Health::Dead) {
+                continue;
+            }
             let is_stuck = has_collision(&game.entities, index, *current_pos, *current_size);
             if is_stuck {
                 let mut offset = 1.0;
