@@ -80,11 +80,12 @@ pub(crate) fn system(game: &mut Game) {
     for (idx1, idx2, impact) in collisions {
         for (idx, other_idx) in [(idx1, idx2), (idx2, idx1)] {
             if let Entity { vel: Some(vel), .. } = &mut game.entities[idx] {
-                if impact.toi > 0.01 {
-                    *vel *= impact.toi * 0.99;
+                let new_vel = *vel * impact.toi * 0.99;
+                *vel = if new_vel.norm() < 0.1 {
+                    Vector::zeros()
                 } else {
-                    *vel = Vector::zeros();
-                }
+                    new_vel
+                };
             }
             if let Entity {
                 physics: Some(physics),
