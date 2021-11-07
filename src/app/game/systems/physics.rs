@@ -10,7 +10,7 @@ pub(crate) fn system(game: &mut Game) {
         } = entity
         {
             vel.y += physics.gravity;
-            vel.x += -vel.x.signum() * physics.friction;
+            vel.x *= (1.0 - physics.friction);
         }
     }
 }

@@ -12,9 +12,9 @@ pub(crate) fn system(game: &mut Game) {
             ..
         } = entity
         {
-            if pos.y > SCREEN_HEIGHT as i32 {
-                pos.x = (SCREEN_WIDTH as i32) / 4;
-                pos.y = 0;
+            if pos.y > SCREEN_HEIGHT as f32 {
+                pos.x = (SCREEN_WIDTH as f32) / 4.0;
+                pos.y = 0.0;
                 vel.y = 0.0;
                 *health = Health::Alive;
             }

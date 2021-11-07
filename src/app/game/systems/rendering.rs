@@ -2,37 +2,39 @@ use sdl2::{rect::Rect, render::Canvas, video::Window};
 
 use crate::{
     app::game::{entity::Entity, Game},
-    draw::{SCREEN_WIDTH, ZOOM_FACTOR},
+    draw::ZOOM_FACTOR,
 };
 
 pub(crate) fn system(game: &Game, canvas: &mut Canvas<Window>) -> Result<(), String> {
     for entity in &game.entities {
         if let Entity {
             pos: Some(pos),
-            size: Some(size),
+            shape: Some(cuboid),
             draw: Some(draw),
             ..
         } = &entity
         {
             canvas.set_draw_color(draw.color);
             canvas.fill_rect(Rect::new(
-                pos.x * ZOOM_FACTOR as i32,
-                pos.y * ZOOM_FACTOR as i32,
-                size.w * ZOOM_FACTOR,
-                size.h * ZOOM_FACTOR,
+                ((pos.x - cuboid.half_extents.x) * ZOOM_FACTOR as f32).round() as i32,
+                ((pos.y - cuboid.half_extents.y) * ZOOM_FACTOR as f32).round() as i32,
+                (cuboid.half_extents.x * 2.0 * ZOOM_FACTOR as f32).round() as u32,
+                (cuboid.half_extents.y * 2.0 * ZOOM_FACTOR as f32).round() as u32,
             ))?;
-            canvas.fill_rect(Rect::new(
-                (pos.x + SCREEN_WIDTH as i32) * ZOOM_FACTOR as i32,
-                pos.y * ZOOM_FACTOR as i32,
-                size.w * ZOOM_FACTOR,
-                size.h * ZOOM_FACTOR,
-            ))?;
-            canvas.fill_rect(Rect::new(
-                (pos.x - SCREEN_WIDTH as i32) * ZOOM_FACTOR as i32,
-                pos.y * ZOOM_FACTOR as i32,
-                size.w * ZOOM_FACTOR,
-                size.h * ZOOM_FACTOR,
-            ))?;
+            // canvas.fill_rect(Rect::new(
+            //     (((pos.x - cuboid.half_extents.x) + SCREEN_WIDTH as f32) * ZOOM_FACTOR as f32)
+            //         as i32,
+            //     ((pos.y /*cuboid.half_extents.y) * ZOOM_FACTOR as f32) as i32,
+            //     (cuboid.half_extents.x * 2.0 * ZOOM_FACTOR as f32) as u32,
+            //     (cuboid.half_extents.y * 2.0 * ZOOM_FACTOR as f32) as u32,
+            // ))?;
+            // canvas.fill_rect(Rect::new(
+            //     (((pos.x - cuboid.half_extents.x) - SCREEN_WIDTH as f32) * ZOOM_FACTOR as f32)
+            //         as i32,
+            //     ((pos.y - cuboid.half_extents.y) * ZOOM_FACTOR as f32) as i32,
+            //     (cuboid.half_extents.x * 2.0 * ZOOM_FACTOR as f32) as u32,
+            //     (cuboid.half_extents.y * 2.0 * ZOOM_FACTOR as f32) as u32,
+            // ))?;
         }
     }
     Ok(())

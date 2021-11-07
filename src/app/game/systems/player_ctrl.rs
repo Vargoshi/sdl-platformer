@@ -6,7 +6,7 @@ pub(crate) fn system(game: &mut Game, ks: KeyboardState) {
     for entity in &mut game.entities {
         if let Entity {
             pos: Some(_),
-            size: Some(_),
+            shape: Some(_),
             vel: Some(vel),
             physics: Some(physics),
             health: Some(health),
@@ -30,8 +30,16 @@ pub(crate) fn system(game: &mut Game, ks: KeyboardState) {
             //     "{:?} {} {} {}",
             //     physics.contacts,
             //     if physics.on_floor { "floor" } else { "" },
-            //     if physics.on_left_wall { "left_wall" } else { "" },
-            //     if physics.on_right_wall { "right_wall" } else { "" },
+            //     if physics.on_left_wall {
+            //         "left_wall"
+            //     } else {
+            //         ""
+            //     },
+            //     if physics.on_right_wall {
+            //         "right_wall"
+            //     } else {
+            //         ""
+            //     },
             // );
         }
     }

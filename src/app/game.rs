@@ -4,11 +4,15 @@ mod systems;
 
 use std::collections::HashSet;
 
+use parry2d::{
+    math::{Real, Vector},
+    shape::Cuboid,
+};
 use sdl2::{keyboard::KeyboardState, pixels::Color, render::Canvas, video::Window};
 
 use crate::{
     app::game::{
-        components::{Collision, Health, Physics, Player, Pos, Size, Vel},
+        components::{Health, Physics, Player},
         entity::Entity,
     },
     draw::{SCREEN_HEIGHT, SCREEN_WIDTH},
@@ -22,113 +26,28 @@ pub struct Game {
 
 impl Game {
     pub fn new() -> Self {
-        let sw = SCREEN_WIDTH;
-        let sh = SCREEN_HEIGHT;
+        let sw = SCREEN_WIDTH as Real;
+        let sh = SCREEN_HEIGHT as Real;
+
         let mut game = Self {
             entities: Vec::new(),
         };
-        game.add_player(Pos {
-            x: sw as i32 / 4,
-            y: sh as i32 - 40,
-        });
-        game.add_wall(
-            Pos {
-                x: 0,
-                y: sh as i32 - 15,
-            },
-            Size { w: sw, h: 15 },
-        );
-        game.add_wall(
-            Pos {
-                x: 0,
-                y: sh as i32 - 60 - 3,
-            },
-            Size { w: 8, h: 40 },
-        );
-        game.add_wall(
-            Pos {
-                x: (sw as i32 / 2) + 35,
-                y: sh as i32 - 60 - 3,
-            },
-            Size {
-                w: (sw / 2) - 35,
-                h: 8,
-            },
-        );
-        game.add_wall(
-            Pos {
-                x: 0,
-                y: sh as i32 - 60 - 3,
-            },
-            Size {
-                w: (sw / 2) - 35,
-                h: 8,
-            },
-        );
-        game.add_wall(
-            Pos {
-                x: sw as i32 / 4,
-                y: sh as i32 - 104 - 8,
-            },
-            Size { w: (sw / 2), h: 8 },
-        );
-        game.add_wall(
-            Pos {
-                x: 0,
-                y: sh as i32 - 104,
-            },
-            Size { w: (sw / 8), h: 8 },
-        );
-        game.add_wall(
-            Pos {
-                x: sw as i32 - (sw as i32 / 8),
-                y: sh as i32 - 104,
-            },
-            Size { w: (sw / 8), h: 8 },
-        );
-        game.add_wall(
-            Pos {
-                x: (sw as i32 / 2) + 20,
-                y: sh as i32 - 162,
-            },
-            Size {
-                w: (sw / 2) - 20,
-                h: 8,
-            },
-        );
-        game.add_wall(
-            Pos {
-                x: 0,
-                y: sh as i32 - 162,
-            },
-            Size {
-                w: (sw / 2) - 20,
-                h: 8,
-            },
-        );
-        game.add_enemy(
-            Pos {
-                x: sw as i32 / 4,
-                y: 0,
-            },
-            true,
-        );
-        game.add_enemy(
-            Pos {
-                x: sw as i32 / 2,
-                y: 0,
-            },
-            false,
-        );
+
+        game.add_player(Vector::new(0.0, 0.0));
+
+        game.add_wall(Vector::new(0.0, sh - 4.0), Vector::new(sw / 2.0, 8.0));
+
+        game.add_enemy(Vector::new(sw / 4.0, 0.0), true);
+        game.add_enemy(Vector::new(sw / 2.0, 0.0), false);
+
         game
     }
 
-    fn add_player(&mut self, pos: Pos) {
+    fn add_player(&mut self, pos: Vector<Real>) {
         self.entities.push(Entity {
             pos: Some(pos),
-            size: Some(Size { w: 16, h: 21 }),
-            vel: Some(Vel { x: 0.0, y: 0.0 }),
-            collision: Some(Collision {}),
+            shape: Some(Cuboid::new(Vector::new(8.0, 10.5))),
+            vel: Some(Vector::new(0.0, 0.0)),
             physics: Some(Physics {
                 on_floor: false,
                 on_left_wall: false,
@@ -146,12 +65,11 @@ impl Game {
         })
     }
 
-    fn add_enemy(&mut self, pos: Pos, jumping: bool) {
+    fn add_enemy(&mut self, pos: Vector<Real>, jumping: bool) {
         self.entities.push(Entity {
             pos: Some(pos),
-            size: Some(Size { w: 16, h: 21 }),
-            vel: Some(Vel { x: 0.0, y: 0.0 }),
-            collision: Some(Collision {}),
+            shape: Some(Cuboid::new(Vector::new(8.0, 10.5))),
+            vel: Some(Vector::new(0.0, 0.0)),
             physics: Some(Physics {
                 on_floor: false,
                 on_left_wall: false,
@@ -172,13 +90,19 @@ impl Game {
         })
     }
 
-    fn add_wall(&mut self, pos: Pos, size: Size) {
+    fn add_wall(&mut self, pos: Vector<Real>, extents: Vector<Real>) {
         self.entities.push(Entity {
             pos: Some(pos),
-            size: Some(size),
+            shape: Some(Cuboid::new(extents)),
             vel: None,
-            collision: Some(Collision),
-            physics: None,
+            physics: Some(Physics {
+                on_floor: false,
+                on_left_wall: false,
+                on_right_wall: false,
+                gravity: 0.0,
+                friction: 0.0,
+                contacts: HashSet::new(),
+            }),
             health: None,
             enemy: None,
             player: None,
@@ -190,13 +114,12 @@ impl Game {
 
     pub fn step(&mut self, ks: KeyboardState) {
         systems::player_ctrl::system(self, ks);
+        systems::enemy_ai::system(self);
         systems::physics::system(self);
-        systems::collisions::system(self);
+        systems::collision::system(self);
         systems::movement::system(self);
         systems::damage::system(self);
         systems::respawn::system(self);
-        systems::stuck_detection::system(self);
-        systems::enemy_ai::system(self);
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>) -> Result<(), String> {
