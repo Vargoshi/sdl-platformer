@@ -10,6 +10,7 @@ use crate::app::game::{entity::Entity, Game};
 pub(crate) fn system(game: &mut Game) {
     let mut collisions = Vec::new();
 
+    // Reset physics state
     for entity in &mut game.entities {
         if let Entity {
             physics: Some(physics),
@@ -23,25 +24,29 @@ pub(crate) fn system(game: &mut Game) {
         }
     }
 
-    let ent_iter = game.entities.iter().enumerate().filter_map(|(idx, ent)| {
-        if let Entity {
-            pos: Some(pos),
-            shape: Some(shape),
-            vel,
-            physics: Some(physics),
-            ..
-        } = ent
-        {
-            Some((idx, (pos, shape, vel, physics)))
-        } else {
-            None
-        }
-    });
-
-    let ent_pair_iter = Itertools::cartesian_product(ent_iter.clone(), ent_iter.clone())
-        .filter(|((idx1, _ent1), (idx2, _ent2))| idx1 < idx2);
-
-    for ((idx1, ent1), (idx2, ent2)) in ent_pair_iter {
+    // Find all collisions
+    for pair in game
+        .entities
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, ent)| {
+            if let Entity {
+                pos: Some(pos),
+                shape: Some(shape),
+                vel,
+                physics: Some(physics),
+                ..
+            } = ent
+            {
+                Some((idx, (pos, shape, vel, physics)))
+            } else {
+                None
+            }
+        })
+        .combinations(2)
+    {
+        let (idx1, ent1) = pair[0];
+        let (idx2, ent2) = pair[1];
         let (pos1, shape1, vel1, _physics1) = ent1;
         let (pos2, shape2, vel2, _physics2) = ent2;
 
@@ -71,55 +76,32 @@ pub(crate) fn system(game: &mut Game) {
         }
     }
 
+    // Mutate colliding entities
     for (idx1, idx2, impact) in collisions {
-        if let Entity {
-            vel: Some(vel),
-            physics: Some(physics),
-            ..
-        } = &mut game.entities[idx1]
-        {
-            if impact.toi > 0.01 {
-                *vel *= impact.toi * 0.99;
-            } else {
-                *vel = Vector::zeros();
+        for (idx, other_idx) in [(idx1, idx2), (idx2, idx1)] {
+            if let Entity { vel: Some(vel), .. } = &mut game.entities[idx] {
+                if impact.toi > 0.01 {
+                    *vel *= impact.toi * 0.99;
+                } else {
+                    *vel = Vector::zeros();
+                }
             }
-
-            if impact.normal1.dot(&Vector::new(0.0, 1.0)) > 0.5 {
-                physics.on_floor = true;
+            if let Entity {
+                physics: Some(physics),
+                ..
+            } = &mut game.entities[idx]
+            {
+                if impact.normal1.dot(&Vector::new(0.0, 1.0)) > 0.5 {
+                    physics.on_floor = true;
+                }
+                if impact.normal1.dot(&Vector::new(1.0, 0.0)) > 0.5 {
+                    physics.on_right_wall = true;
+                }
+                if impact.normal1.dot(&Vector::new(-1.0, 0.0)) < 0.5 {
+                    physics.on_left_wall = true;
+                }
+                physics.contacts.insert(other_idx);
             }
-            if impact.normal1.dot(&Vector::new(1.0, 0.0)) > 0.5 {
-                physics.on_right_wall = true;
-            }
-            if impact.normal1.dot(&Vector::new(-1.0, 0.0)) < 0.5 {
-                physics.on_left_wall = true;
-            }
-
-            physics.contacts.insert(idx2);
-        }
-
-        if let Entity {
-            vel: Some(vel),
-            physics: Some(physics),
-            ..
-        } = &mut game.entities[idx2]
-        {
-            if impact.toi > 0.01 {
-                *vel *= impact.toi * 0.99;
-            } else {
-                *vel = Vector::zeros();
-            }
-
-            if impact.normal2.dot(&Vector::new(0.0, 1.0)) > 0.5 {
-                physics.on_floor = true;
-            }
-            if impact.normal2.dot(&Vector::new(1.0, 0.0)) > 0.5 {
-                physics.on_right_wall = true;
-            }
-            if impact.normal2.dot(&Vector::new(-1.0, 0.0)) < 0.5 {
-                physics.on_left_wall = true;
-            }
-
-            physics.contacts.insert(idx1);
         }
     }
 }
