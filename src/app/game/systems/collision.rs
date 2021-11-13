@@ -1,7 +1,10 @@
+use std::collections::HashSet;
+
 use itertools::Itertools;
 use parry2d::{
-    math::{Isometry, Vector},
-    query::time_of_impact,
+    math::{Isometry, Real, Vector},
+    query::{contact, time_of_impact, Contact, TOI},
+    shape::Shape,
 };
 
 use crate::app::game::{entity::Entity, Game};
@@ -24,37 +27,15 @@ pub(crate) fn system(game: &mut Game) {
         }
     }
 
-    // Find all collisions
-    for pair in game
-        .entities
-        .iter()
-        .enumerate()
-        .filter_map(|(idx, ent)| {
-            if let Entity {
-                pos: Some(pos),
-                shape: Some(shape),
-                vel,
-                physics: Some(physics),
-                ..
-            } = ent
-            {
-                Some((idx, (pos, shape, vel, physics)))
-            } else {
-                None
-            }
-        })
-        .combinations(2)
-    {
-        let (idx1, ent1) = pair[0];
-        let (idx2, ent2) = pair[1];
-        let (pos1, shape1, vel1, _physics1) = ent1;
-        let (pos2, shape2, vel2, _physics2) = ent2;
-
-        if vel1.is_none() && vel2.is_none() {
-            continue;
-        }
-
-        let maybe_impact = time_of_impact(
+    fn toi(
+        pos1: &Vector<Real>,
+        vel1: &Option<Vector<Real>>,
+        shape1: &dyn Shape,
+        pos2: &Vector<Real>,
+        vel2: &Option<Vector<Real>>,
+        shape2: &dyn Shape,
+    ) -> Option<TOI> {
+        time_of_impact(
             &Isometry::new(*pos1, 0.0),
             &match vel1 {
                 Some(vel) => *vel,
@@ -69,40 +50,144 @@ pub(crate) fn system(game: &mut Game) {
             shape2,
             1.0,
         )
-        .unwrap();
+        .unwrap()
+    }
 
-        if let Some(impact) = maybe_impact {
-            collisions.push((idx1, idx2, impact));
+    // Find all collisions
+    for (self_idx, self_ent) in game.entities.iter().enumerate() {
+        if let Entity {
+            pos: Some(self_pos),
+            shape: Some(self_shape),
+            vel: Some(self_vel),
+            physics: Some(_),
+            ..
+        } = self_ent
+        {
+            let mut shortest_impact: Option<TOI> = None;
+
+            for (other_idx, other_ent) in game
+                .entities
+                .iter()
+                .enumerate()
+                .filter(|(idx, _)| *idx != self_idx)
+            {
+                if let Entity {
+                    pos: Some(other_pos),
+                    shape: Some(other_shape),
+                    vel: other_vel,
+                    physics: Some(_),
+                    ..
+                } = other_ent
+                {
+                    if let Some(impact) = toi(
+                        self_pos,
+                        &Some(*self_vel),
+                        self_shape,
+                        other_pos,
+                        other_vel,
+                        other_shape,
+                    ) {
+                        if impact.toi < shortest_impact.map(|impact| impact.toi).unwrap_or(1.0) {
+                            shortest_impact = Some(impact);
+                        }
+                    }
+
+                    if let Some(impact) = toi(
+                        self_pos,
+                        &Some(*self_vel),
+                        self_shape,
+                        other_pos,
+                        &None,
+                        other_shape,
+                    ) {
+                        if impact.toi < shortest_impact.map(|impact| impact.toi).unwrap_or(1.0) {
+                            shortest_impact = Some(impact);
+                        }
+                    }
+                }
+            }
+
+            if let Some(impact) = shortest_impact {
+                let remaining_toi = 1.0 - impact.toi;
+                let before_impact_vel = self_vel * impact.toi;
+                let after_impact_vel = self_vel * remaining_toi;
+                let normal_vel = *impact.normal2 * after_impact_vel.dot(&impact.normal2);
+                let tangent_vel = after_impact_vel - normal_vel;
+
+                let mut shortest_impact: Option<TOI> = None;
+
+                for (other_idx, other_ent) in game.entities.iter().enumerate() {
+                    if other_idx == self_idx {
+                        continue;
+                    }
+                    if let Entity {
+                        pos: Some(other_pos),
+                        shape: Some(other_shape),
+                        vel: other_vel,
+                        physics: Some(_),
+                        ..
+                    } = other_ent
+                    {
+                        if let Some(impact) = toi(
+                            &(self_pos + before_impact_vel),
+                            &Some(tangent_vel),
+                            self_shape,
+                            other_pos,
+                            other_vel,
+                            other_shape,
+                        ) {
+                            if impact.toi < shortest_impact.map(|impact| impact.toi).unwrap_or(1.0)
+                            {
+                                shortest_impact = Some(impact);
+                            }
+                        }
+
+                        if let Some(impact) = toi(
+                            &(self_pos + before_impact_vel),
+                            &Some(tangent_vel),
+                            self_shape,
+                            other_pos,
+                            &None,
+                            other_shape,
+                        ) {
+                            if impact.toi < shortest_impact.map(|impact| impact.toi).unwrap_or(1.0)
+                            {
+                                shortest_impact = Some(impact);
+                            }
+                        }
+                    }
+                }
+
+                if let Some(impact2) = shortest_impact {
+                    let toi = remaining_toi * impact2.toi;
+                    let before_impact2_vel = tangent_vel * impact2.toi;
+                    let vel = before_impact_vel + before_impact2_vel;
+                    println!("2 {}", vel);
+                    collisions.push((self_idx, vel, HashSet::<usize>::new(), false, false, false));
+                } else {
+                    let vel = before_impact_vel + tangent_vel;
+                    println!("1 {}", vel);
+                    collisions.push((self_idx, vel, HashSet::<usize>::new(), false, false, false));
+                }
+            }
         }
     }
 
+    //dbg!(&collisions);
     // Mutate colliding entities
-    for (idx1, idx2, impact) in collisions {
-        for (idx, other_idx) in [(idx1, idx2), (idx2, idx1)] {
-            if let Entity { vel: Some(vel), .. } = &mut game.entities[idx] {
-                let new_vel = *vel * impact.toi * 0.99;
-                *vel = if new_vel.norm() < 0.1 {
-                    Vector::zeros()
-                } else {
-                    new_vel
-                };
-            }
-            if let Entity {
-                physics: Some(physics),
-                ..
-            } = &mut game.entities[idx]
-            {
-                if impact.normal1.dot(&Vector::new(0.0, 1.0)) > 0.5 {
-                    physics.on_floor = true;
-                }
-                if impact.normal1.dot(&Vector::new(1.0, 0.0)) > 0.5 {
-                    physics.on_right_wall = true;
-                }
-                if impact.normal1.dot(&Vector::new(-1.0, 0.0)) < 0.5 {
-                    physics.on_left_wall = true;
-                }
-                physics.contacts.insert(other_idx);
-            }
+    for (self_idx, new_vel, other_indices, on_floor, on_left_wall, on_right_wall) in collisions {
+        if let Entity { vel: Some(vel), .. } = &mut game.entities[self_idx] {
+            *vel = Vector::new(new_vel.x.floor(), new_vel.y.floor());
+        }
+        if let Entity {
+            physics: Some(physics),
+            ..
+        } = &mut game.entities[self_idx]
+        {
+            physics.on_floor = on_floor;
+            physics.on_right_wall = on_right_wall;
+            physics.on_left_wall = on_left_wall;
+            physics.contacts.extend(other_indices);
         }
     }
 }

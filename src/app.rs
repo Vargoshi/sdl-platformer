@@ -43,7 +43,6 @@ impl App {
     pub fn draw(&mut self) -> Result<(), String> {
         self.canvas.set_draw_color(Color::RGBA(0, 0, 0, 255));
         self.canvas.clear();
-
         match &self.state {
             State::Menu => {
                 // crate::draw::draw_text(self.canvas, ...)

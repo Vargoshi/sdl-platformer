@@ -5,4 +5,5 @@ pub(super) mod movement;
 pub(super) mod physics;
 pub(super) mod player_ctrl;
 pub(super) mod rendering;
+pub(super) mod debug_rendering;
 pub(super) mod respawn;

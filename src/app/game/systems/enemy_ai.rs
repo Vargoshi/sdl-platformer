@@ -23,7 +23,7 @@ pub(crate) fn system(game: &mut Game) {
                 }
 
                 if enemy.jumping && physics.on_floor {
-                    vel.y -= 4.0;
+                    vel.y = -4.0;
                 }
             }
 

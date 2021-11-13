@@ -35,10 +35,11 @@ impl Game {
 
         game.add_player(Vector::new(0.0, 0.0));
 
-        game.add_wall(Vector::new(0.0, sh - 4.0), Vector::new(sw / 2.0, 8.0));
+        game.add_wall(Vector::new(sw / 2.0, sh - 8.0), Vector::new(sw, 4.0));
+        game.add_wall(Vector::new(sw / 2.0, sh - 32.0), Vector::new(4.0, 24.0));
 
-        game.add_enemy(Vector::new(sw / 4.0, 0.0), true);
-        game.add_enemy(Vector::new(sw / 2.0, 0.0), false);
+        // game.add_enemy(Vector::new(sw / 4.0, 0.0), true);
+        // game.add_enemy(Vector::new(sw / 2.0, 0.0), false);
 
         game
     }
@@ -107,7 +108,7 @@ impl Game {
             enemy: None,
             player: None,
             draw: Some(Draw {
-                color: Color::RGBA(200, 200, 200, 255),
+                color: Color::RGBA(200, 100, 50, 255),
             }),
         })
     }
@@ -118,12 +119,13 @@ impl Game {
         systems::physics::system(self);
         systems::collision::system(self);
         systems::movement::system(self);
-        systems::damage::system(self);
+        //systems::damage::system(self);
         systems::respawn::system(self);
     }
 
     pub fn draw(&self, canvas: &mut Canvas<Window>) -> Result<(), String> {
         systems::rendering::system(self, canvas)?;
+        systems::debug_rendering::system(self, canvas)?;
 
         Ok(())
     }
